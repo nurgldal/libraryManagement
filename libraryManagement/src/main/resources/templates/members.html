@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Members</title>
+    <script>
+        // Fetch members from the backend
+        async function fetchMembers() {
+            const response = await fetch('/api/members');
+            const members = await response.json();
+            const membersList = document.getElementById('members-list');
+            membersList.innerHTML = '';
+            members.forEach(member => {
+                membersList.innerHTML += `
+                    <li>
+                        ${member.name} - ${member.telephone} 
+                        <button onclick="deleteMember(${member.id})">Delete</button>
+                        <button onclick="showEditMemberForm(${member.id})">Edit</button>
+                    </li>
+                `;
+            });
+        }
+
+        // Create a new member
+        async function createMember() {
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            const telephone = document.getElementById('telephone').value;
+
+            const response = await fetch('/api/members', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, address, telephone })
+            });
+
+            if (response.ok) {
+                fetchMembers(); // Reload the list of members
+            }
+        }
+
+        // Delete an existing member
+        async function deleteMember(id) {
+            const response = await fetch(`/api/members/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                fetchMembers(); // Reload the list of members
+            }
+        }
+
+        // Show edit form with current member details
+        async function showEditMemberForm(id) {
+            const response = await fetch(`/api/members/${id}`);
+            const member = await response.json();
+
+            document.getElementById('edit-name').value = member.name;
+            document.getElementById('edit-address').value = member.address;
+            document.getElementById('edit-telephone').value = member.telephone;
+            document.getElementById('edit-id').value = member.id;
+            document.getElementById('edit-member-form').style.display = 'block';
+        }
+
+        // Edit an existing member
+        async function editMember() {
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('edit-name').value;
+            const address = document.getElementById('edit-address').value;
+            const telephone = document.getElementById('edit-telephone').value;
+
+            const response = await fetch(`/api/members/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, address, telephone })
+            });
+
+            if (response.ok) {
+                fetchMembers(); // Reload the list of members
+                document.getElementById('edit-member-form').style.display = 'none'; // Hide the edit form
+            }
+        }
+    </script>
+</head>
+<body onload="fetchMembers()">
+    <h1>Members</h1>
+
+    <!-- Add Member Form -->
+    <div>
+        <h3>Add Member</h3>
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" required><br>
+        <label for="address">Address:</label><br>
+        <input type="text" id="address" required><br>
+        <label for="telephone">Telephone:</label><br>
+        <input type="text" id="telephone" required><br>
+        <button onclick="createMember()">Add</button>
+    </div>
+
+    <!-- List of Members -->
+    <h3>Member List</h3>
+    <ul id="members-list"></ul>
+
+    <!-- Edit Member Form -->
+    <div id="edit-member-form" style="display: none;">
+        <h3>Edit Member</h3>
+        <label for="edit-name">Name:</label><br>
+        <input type="text" id="edit-name" required><br>
+        <label for="edit-address">Address:</label><br>
+        <input type="text" id="edit-address" required><br>
+        <label for="edit-telephone">Telephone:</label><br>
+        <input type="text" id="edit-telephone" required><br>
+        <input type="hidden" id="edit-id">
+        <button onclick="editMember()">Save Changes</button>
+        <button onclick="document.getElementById('edit-member-form').style.display='none'">Cancel</button>
+    </div>
+</body>
+</html>
